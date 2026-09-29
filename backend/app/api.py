@@ -131,6 +131,8 @@ def parse_shots_csv(source):
         # Convert to a list of objects ready for MongoDB
         result = []
         for session_id, content in sessions.items():
+            if col.find_one({"session_id": session_id}):
+                continue
             result.append({
                 "session_id": session_id,
                 "date": content["date"],
