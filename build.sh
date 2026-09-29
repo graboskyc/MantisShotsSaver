@@ -2,7 +2,7 @@
 
 echo
 echo "+================================"
-echo "| START: pfam"
+echo "| START: mantis"
 echo "+================================"
 echo
 
@@ -15,7 +15,7 @@ echo "Using conn string ${MDBCONNSTR}"
 echo 
 echo "Building container using tag ${abbrvhash}"
 echo
-docker build -t graboskyc/pfam:latest -t graboskyc/pfam:${abbrvhash} .
+docker build -t graboskyc/mantis:latest -t graboskyc/mantis:${abbrvhash} .
 
 EXITCODE=$?
 
@@ -25,13 +25,13 @@ if [ $EXITCODE -eq 0 ]
     echo 
     echo "Starting container"
     echo
-    docker stop pfam
-    docker rm pfam
-    docker run -t -i -d -p 8000:8000 --name pfam -e "MDBCONNSTR=${MDBCONNSTR}" --restart unless-stopped graboskyc/pfam:${abbrvhash}
+    docker stop mantis
+    docker rm mantis
+    docker run -t -i -d -p 8000:8000 --name mantis -e "MDBCONNSTR=${MDBCONNSTR}" -e "BASEURL=${BASEURL}" --restart unless-stopped graboskyc/mantis:${abbrvhash}
 
     echo
     echo "+================================"
-    echo "| END:  pfam"
+    echo "| END:  mantis"
     echo "+================================"
     echo
 else

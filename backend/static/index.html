@@ -5,10 +5,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="color-scheme" content="light" />
         
-        <title>PHAM</title>
+        <title>Mantis Shot Saver</title>
+        <link rel="icon" type="image/png" href="/img/icon.png">
 
         <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.red.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.grey.min.css">
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
 
         <script src="/js/init.js"></script>
@@ -25,14 +26,28 @@
 
 
             <article class="container-fluid" data-theme="light">
-                <h1>PHAM</h1>
+                <h1>Mantis Shot Saver</h1>
             </article>
             
             <article>
-                <header><h1>Stuff goes here</h1></header>
-                
-                <p>Welcome to the PFAM</p>
+                <header>
+                    <div x-show="currentSession">
+                        <h2 x-text="new Date(currentSession.date.$date).toLocaleString()"></h2>
+                        <div style="position: relative; display: inline-block;">
+                            <img :src="currentSession.image" alt="Session Image" style="max-width: 100%;">
+                            <template x-for="shot in currentSession.shots" :key="shot.Index">
+                                <div style="position: absolute; width: 10px; height: 10px; background: red; border-radius: 50%; transform: translate(-50%, -50%);"
+                                     :style="{ left: (shot['Position X'] * 100) + '%', top: (shot['Position Y'] * 100) + '%' }">
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    <div x-show="!currentSession">Loading...</div>
+                </header>
+                <footer>
+                    <button @click="prevSession" :disabled="skip === 0 && currentIndex === 0">Previous</button>
+                    <button @click="nextSession">Next</button>
+                </footer>
             </article>
-
     </body>
 </html>
