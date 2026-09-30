@@ -17,4 +17,6 @@ PicoCSS, FastAPI, AlpineJS, MongoDB
 
 ## Screenshots
 
-![](screenshots/template.png)
+![](screenshots/01.png)
+
+![](screenshots/02.png)
