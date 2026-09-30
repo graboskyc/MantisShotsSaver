@@ -70,6 +70,22 @@ async def get_sessions(skip: int = 0, limit: int = 10):
     sessions = list(col.find().sort("date", -1).skip(skip).limit(limit))
     return json.loads(dumps(sessions))
 
+@api_app.get("/stats/shots-over-time")
+async def get_shots_over_time():
+    pipeline = [
+        {"$project": {
+            "date": {"$dateToString": {"format": "%Y-%m-%d", "date": "$date"}},
+            "shot_count": {"$size": {"$ifNull": ["$shots", []]}}
+        }},
+        {"$group": {
+            "_id": "$date",
+            "total_shots": {"$sum": "$shot_count"}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    results = list(col.aggregate(pipeline))
+    return results
+
 @api_app.get("/hello")
 async def hello():
     return {"message": "Hello World"}
