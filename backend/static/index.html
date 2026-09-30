@@ -43,7 +43,8 @@
                                 <img :src="currentSession.image" alt="Session Image">
                                 <template x-for="shot in currentSession.shots" :key="shot.Index">
                                     <div style="position: absolute;" :style="{ left: (shot['Position X'] * 100) + '%', top: (shot['Position Y'] * 100) + '%' }">
-                                        <div style="width: 20px; height: 20px; background: red; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; transform: translate(-50%, -50%); cursor: pointer;"
+                                        <div style="width: 20px; height: 20px; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; transform: translate(-50%, -50%); cursor: pointer;"
+                                             :style="{ background: shot.Score === 0 ? 'black' : 'red' }"
                                              x-text="shot.Index">
                                         </div>
                                         <div class="shot-label"

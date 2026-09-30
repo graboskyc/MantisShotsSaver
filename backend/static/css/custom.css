@@ -44,7 +44,7 @@ th,td {
 
 .shot-label {
     position: absolute;
-    background: black;
+    background: var(--pico-secondary-hover-background);
     color: white;
     padding: 2px 4px;
     font-size: 10px;
