@@ -11,6 +11,7 @@ source backend/.env
 datehash=`date | md5sum | cut -d" " -f1`
 abbrvhash=${datehash: -8}
 echo "Using conn string ${MDBCONNSTR}"
+echo "Using username ${USERNAME}"
 
 echo 
 echo "Building container using tag ${abbrvhash}"
@@ -27,7 +28,7 @@ if [ $EXITCODE -eq 0 ]
     echo
     docker stop mantis
     docker rm mantis
-    docker run -t -i -d -p 8000:8000 --name mantis -e "MDBCONNSTR=${MDBCONNSTR}" -e "BASEURL=${BASEURL}" --restart unless-stopped graboskyc/mantis:${abbrvhash}
+    docker run -t -i -d -p 8000:8000 --name mantis -e "MDBCONNSTR=${MDBCONNSTR}" -e "USERNAME=${USERNAME}" --restart unless-stopped graboskyc/mantis:${abbrvhash}
 
     echo
     echo "+================================"

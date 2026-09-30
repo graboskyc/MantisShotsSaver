@@ -34,19 +34,33 @@ client = pymongo.MongoClient(os.environ["MDBCONNSTR"].strip())
 db = client["mantis"]
 col = db["shots"]
 
-url = os.environ["BASEURL"].strip()
+SHOTURL = "https://train.mantisx.com/itarget/user-shots-csv/" + os.environ["USERNAME"].strip() + "/"
+SESSIONURL = "https://train.mantisx.com/itarget/user-sessions-csv/" + os.environ["USERNAME"].strip() + "/"
+
 
 def import_shots_last_day():
-    lastDayUrl = url + "?start_date=" + (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d") + "&end_date=" + datetime.now().strftime("%Y-%m-%d")
+    lastDayUrl = SHOTURL + "?start_date=" + (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d") + "&end_date=" + datetime.now().strftime("%Y-%m-%d")
     shots = parse_shots_csv(lastDayUrl)
     if shots:
-        col.insert_many(shots)
+        for shot in shots:
+            col.update_one({"session_id": shot["session_id"]}, {"$set": shot}, upsert=True)
     return {"imported": len(shots) if shots else 0, "urlUsed": lastDayUrl}
+
+def import_sessions_last_day():
+    lastDayUrl = SESSIONURL + "?start_date=" + (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d") + "&end_date=" + datetime.now().strftime("%Y-%m-%d")
+    parse_sessions_csv(lastDayUrl)
+    return {"imported": "last_day", "urlUsed": lastDayUrl}
 
 scheduler.add_job(
     import_shots_last_day,
     trigger=CronTrigger(hour=0, minute=0),
     id='import_shots_job',
+    replace_existing=True
+)
+scheduler.add_job(
+    import_sessions_last_day,
+    trigger=CronTrigger(hour=0, minute=0),
+    id='import_sessions_job',
     replace_existing=True
 )
 scheduler.start()
@@ -60,12 +74,25 @@ async def get_sessions(skip: int = 0, limit: int = 10):
 async def hello():
     return {"message": "Hello World"}
 
+@api_app.get("/importSessionsAll")
+async def import_all_sessions():
+    allSessionHistoryUrl = SESSIONURL + "?start_date=2025-12-01&end_date=" + datetime.now().strftime("%Y-%m-%d")
+    parse_sessions_csv(allSessionHistoryUrl)
+    return {"imported": "all", "urlUsed": allSessionHistoryUrl}
+
+@api_app.get("/importSessionsLastDay")
+async def import_sessions_last_day():
+    lastDayUrl = SESSIONURL + "?start_date=" + (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d") + "&end_date=" + datetime.now().strftime("%Y-%m-%d")
+    parse_sessions_csv(lastDayUrl)
+    return {"imported": "last_day", "urlUsed": lastDayUrl}
+
 @api_app.get("/importShotsAll")
 async def import_all_shots():
-    allShotHistoryUrl = url + "?start_date=2025-12-01&end_date=" + datetime.now().strftime("%Y-%m-%d")
+    allShotHistoryUrl = SHOTURL + "?start_date=2025-12-01&end_date=" + datetime.now().strftime("%Y-%m-%d")
     shots = parse_shots_csv(allShotHistoryUrl)
     if shots:
-        col.insert_many(shots)
+        for shot in shots:
+            col.update_one({"session_id": shot["session_id"]}, {"$set": shot}, upsert=True)
     return {"imported": len(shots) if shots else 0, "urlUsed": allShotHistoryUrl}
 
 @api_app.get("/importShotsLastDay")
@@ -142,6 +169,54 @@ def parse_shots_csv(source):
             })
             
         return result
+    finally:
+        if not isinstance(f, io.StringIO):
+            f.close()
+
+def parse_sessions_csv(source):
+    """
+    Parses a sessions CSV file from a file path or URL and upserts into MongoDB.
+    """
+    if source.startswith(('http://', 'https://')):
+        response = requests.get(source)
+        response.raise_for_status()
+        f = io.StringIO(response.text)
+    else:
+        f = open(source, 'r', encoding='utf-8')
+    
+    try:
+        reader = csv.reader(f)
+        header = None
+        for row in reader:
+            if row and row[0] == 'ID':
+                header = row
+                break
+        
+        if not header:
+            return None
+        
+        for row in reader:
+            if not row:
+                continue
+            data = dict(zip(header, row))
+            session_id = data['ID']
+            session_data = {
+                "session_id": session_id,
+                "date": datetime.fromisoformat(data['Date'].replace('Z', '+00:00')),
+                "targets": json.loads(data['Targets']),
+                "start_time": datetime.fromisoformat(data['Start Time'].replace('Z', '+00:00')),
+                "end_time": datetime.fromisoformat(data['End Time'].replace('Z', '+00:00')),
+                "par_time": float(data['Par Time']),
+                "drill_name": data['Drill Name'],
+                "num_players": int(data['Num Players']),
+                "target_distance_yards": float(data['Target Distance Yards']),
+                "view_aspect": float(data['View Aspect']),
+            }
+            col.update_one(
+                {"session_id": session_id}, 
+                {"$set": session_data}, 
+                upsert=True
+            )
     finally:
         if not isinstance(f, io.StringIO):
             f.close()

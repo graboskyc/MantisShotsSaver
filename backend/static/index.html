@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -32,7 +32,8 @@
             <article>
                 <header>
                     <div x-show="currentSession">
-                        <h2 x-text="new Date(currentSession.date.$date).toLocaleString()"></h2>
+                        <h2 x-text="currentSession.drill_name"></h2>
+                        <h3 x-text="new Date(currentSession.date.$date).toLocaleString()"></h3>
                         <div class="img-container">
                             <div class="img-wrapper">
                                 <img :src="currentSession.image" alt="Session Image">
