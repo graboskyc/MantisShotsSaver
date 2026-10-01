@@ -219,7 +219,9 @@ function init() {
 
             const options = {
                 chart: { type: 'heatmap', height: 350, toolbar: { show: false } },
-                series: series,                xaxis: { title: { text: 'Time (s)' } },                plotOptions: {
+                series: series,                
+                xaxis: { title: { text: 'Time (s)' } },                
+                plotOptions: {
                     heatmap: {
                         enableShades: true,
                         shadeIntensity: 0.5,
