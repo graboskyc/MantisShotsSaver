@@ -166,6 +166,11 @@ function init() {
             const options = {
                 chart: { type: 'area', height: 350, toolbar: { show: false } },
                 series: [{ name: 'Avg Score', data: data.map(d => d.avg_score) }],
+                dataLabels: {
+                    enabled: true,
+                    formatter: function(val) { return val.toFixed(1); },
+                    style: { colors: ['#000000'] }
+                },
                 xaxis: { categories: data.map(d => d.date) },
                 yaxis: {
                     labels: {
