@@ -17,6 +17,14 @@ function init() {
             const timeData = await timeResponse.json();
             this.renderTimeGaugeChart(timeData.time);
 
+            const accuracyLast10Response = await fetch(`/api/stats/average-accuracy-last10`);
+            const accuracyLast10Data = await accuracyLast10Response.json();
+            this.renderGaugeChartLast10(accuracyLast10Data.accuracy);
+
+            const timeLast10Response = await fetch(`/api/stats/average-shot-time-last10`);
+            const timeLast10Data = await timeLast10Response.json();
+            this.renderTimeGaugeChartLast10(timeLast10Data.time);
+
             const distData = await (await fetch(`/api/stats/shot-distribution`)).json();
             this.renderDistributionChart(distData);
 
@@ -72,11 +80,13 @@ function init() {
         },
 
         renderGaugeChart(accuracy) {
+            const color = accuracy < 80 ? '#FF0000' : accuracy <= 90 ? '#FFB200' : '#00A100';
             const options = {
                 chart: {
                     type: 'radialBar',
                     height: 350
                 },
+                colors: [color],
                 series: [accuracy],
                 plotOptions: {
                     radialBar: {
@@ -121,6 +131,60 @@ function init() {
                 title: { text: 'Average Shot Time', align: 'center' }
             };
             new ApexCharts(document.querySelector("#time-gauge-chart"), options).render();
+        },
+
+        renderGaugeChartLast10(accuracy) {
+            const color = accuracy < 80 ? '#FF0000' : accuracy <= 90 ? '#FFB200' : '#00A100';
+            const options = {
+                chart: {
+                    type: 'radialBar',
+                    height: 350
+                },
+                colors: [color],
+                series: [accuracy],
+                plotOptions: {
+                    radialBar: {
+                        startAngle: -90,
+                        endAngle: 90,
+                        hollow: { size: '70%' },
+                        dataLabels: {
+                            name: { show: false },
+                            value: {
+                                fontSize: '22px',
+                                formatter: function(val) { return val + '%' }
+                            }
+                        }
+                    }
+                },
+                labels: ['Average Accuracy (Last 10)'],
+                title: {
+                    text: 'Average Accuracy (Last 10)',
+                    align: 'center'
+                }
+            };
+
+            const chart = new ApexCharts(document.querySelector("#gauge-chart-last10"), options);
+            chart.render();
+        },
+
+        renderTimeGaugeChartLast10(time) {
+            const options = {
+                chart: { type: 'radialBar', height: 350 },
+                series: [(time / 5) * 100],
+                plotOptions: {
+                    radialBar: {
+                        startAngle: -90, endAngle: 90,
+                        hollow: { size: '70%' },
+                        dataLabels: {
+                            name: { show: false },
+                            value: { fontSize: '22px', formatter: function(val) { return time + 's' } }
+                        }
+                    }
+                },
+                labels: ['Average Shot Time (Last 10)'],
+                title: { text: 'Average Shot Time (Last 10)', align: 'center' }
+            };
+            new ApexCharts(document.querySelector("#time-gauge-chart-last10"), options).render();
         },
 
         renderDistributionChart(data) {

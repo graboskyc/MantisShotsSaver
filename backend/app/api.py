@@ -138,6 +138,41 @@ async def get_average_shot_time():
         return {"time": 0}
     return {"time": round(result[0]["avg_time"], 2)}
 
+@api_app.get("/stats/average-accuracy-last10")
+async def get_average_accuracy_last10():
+    pipeline = [
+        {"$sort": {"date": -1}},
+        {"$limit": 10},
+        {"$unwind": "$shots"},
+        {"$project": {
+            "is_hit": {"$cond": [{"$gt": ["$shots.Score", 0]}, 1, 0]}
+        }},
+        {"$group": {
+            "_id": None,
+            "avg_accuracy": {"$avg": "$is_hit"}
+        }}
+    ]
+    result = list(col.aggregate(pipeline))
+    if not result:
+        return {"accuracy": 0}
+    return {"accuracy": round(result[0]["avg_accuracy"] * 100, 2)}
+
+@api_app.get("/stats/average-shot-time-last10")
+async def get_average_shot_time_last10():
+    pipeline = [
+        {"$sort": {"date": -1}},
+        {"$limit": 10},
+        {"$unwind": "$shots"},
+        {"$group": {
+            "_id": None,
+            "avg_time": {"$avg": "$shots.Time"}
+        }}
+    ]
+    result = list(col.aggregate(pipeline))
+    if not result or result[0]["avg_time"] is None:
+        return {"time": 0}
+    return {"time": round(result[0]["avg_time"], 2)}
+
 @api_app.get("/stats/shot-distribution")
 async def get_shot_distribution():
     pipeline = [
