@@ -83,6 +83,61 @@ async def get_shots_over_time():
     results = list(col.aggregate(pipeline))
     return results
 
+@api_app.get("/stats/session-scores")
+async def get_session_scores():
+    # Pipeline to get min, max, open, close (first/last) scores per session
+    pipeline = [
+        {"$unwind": "$shots"},
+        {"$match": {"shots.Score": {"$ne": None}}},
+        {"$group": {
+            "_id": "$_id",
+            "date": {"$first": "$date"},
+            "open": {"$first": "$shots.Score"},
+            "close": {"$last": "$shots.Score"},
+            "min": {"$min": "$shots.Score"},
+            "max": {"$max": "$shots.Score"}
+        }},
+        {"$sort": {"date": 1}},
+        {"$project": {
+            "_id": 0,
+            "x": {"$dateToString": {"format": "%Y-%m-%d %H:%M", "date": "$date"}},
+            "y": ["$open", "$min", "$max", "$close"]
+        }}
+    ]
+    results = list(col.aggregate(pipeline))
+    return results
+
+@api_app.get("/stats/average-accuracy")
+async def get_average_accuracy():
+    pipeline = [
+        {"$unwind": "$shots"},
+        {"$project": {
+            "is_hit": {"$cond": [{"$gt": ["$shots.Score", 0]}, 1, 0]}
+        }},
+        {"$group": {
+            "_id": None,
+            "avg_accuracy": {"$avg": "$is_hit"}
+        }}
+    ]
+    result = list(col.aggregate(pipeline))
+    if not result:
+        return {"accuracy": 0}
+    return {"accuracy": round(result[0]["avg_accuracy"] * 100, 2)}
+
+@api_app.get("/stats/average-shot-time")
+async def get_average_shot_time():
+    pipeline = [
+        {"$unwind": "$shots"},
+        {"$group": {
+            "_id": None,
+            "avg_time": {"$avg": "$shots.Time"}
+        }}
+    ]
+    result = list(col.aggregate(pipeline))
+    if not result or result[0]["avg_time"] is None:
+        return {"time": 0}
+    return {"time": round(result[0]["avg_time"], 2)}
+
 @api_app.get("/hello")
 async def hello():
     return {"message": "Hello World"}
