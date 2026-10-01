@@ -213,14 +213,13 @@ function init() {
                 name: y.toString(),
                 data: xCoords.map(x => {
                     const item = data.find(d => d.x === x && d.y === y);
-                    return { x: x.toString() + 's', y: item ? item.count : 0 };
+                    return { x: (x / 2).toFixed(1) + 's', y: item ? item.count : 0 };
                 })
             }));
 
             const options = {
                 chart: { type: 'heatmap', height: 350, toolbar: { show: false } },
-                series: series,
-                plotOptions: {
+                series: series,                xaxis: { title: { text: 'Time (s)' } },                plotOptions: {
                     heatmap: {
                         enableShades: true,
                         shadeIntensity: 0.5,

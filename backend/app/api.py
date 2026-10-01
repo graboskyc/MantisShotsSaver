@@ -198,9 +198,10 @@ async def get_time_accuracy_correlation():
         {"$unwind": "$shots"},
         {"$project": {
             "_id": 0,
-            "x": {"$floor": {"$divide": ["$shots.Time", 1.0]}},
+            "x": {"$floor": {"$multiply": ["$shots.Time", 2]}},
             "y": {"$floor": ["$shots.Score"]}
         }},
+        {"$match": {"x": {"$lt": 12}}},
         {"$group": {
             "_id": {"x": "$x", "y": "$y"},
             "count": {"$sum": 1}
