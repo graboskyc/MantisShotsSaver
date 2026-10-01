@@ -138,6 +138,68 @@ async def get_average_shot_time():
         return {"time": 0}
     return {"time": round(result[0]["avg_time"], 2)}
 
+@api_app.get("/stats/shot-distribution")
+async def get_shot_distribution():
+    pipeline = [
+        {"$unwind": "$shots"},
+        {"$project": {
+            "_id": 0,
+            "x": {"$floor": {"$multiply": ["$shots.Position X", 10]}},
+            "y": {"$floor": {"$multiply": ["$shots.Position Y", 10]}}
+        }},
+        {"$group": {
+            "_id": {"x": "$x", "y": "$y"},
+            "count": {"$sum": 1}
+        }},
+        {"$project": {
+            "_id": 0,
+            "x": "$_id.x",
+            "y": "$_id.y",
+            "count": 1
+        }}
+    ]
+    # Restructure for heatmap: group by x, then list of y:count
+    results = list(col.aggregate(pipeline))
+    heatmap_data = []
+    # Simplified approach: return raw grouped data if the frontend handles it or pre-aggregate
+    return results
+
+@api_app.get("/stats/shot-consistency")
+async def get_shot_consistency():
+    pipeline = [
+        {"$unwind": "$shots"},
+        {"$group": {
+            "_id": "$session_id",
+            "date": {"$first": "$date"},
+            "avg_score": {"$avg": "$shots.Score"},
+            "std_dev": {"$stdDevPop": "$shots.Score"}
+        }},
+        {"$sort": {"date": 1}},
+        {"$project": {"_id": 0, "date": {"$dateToString": {"format": "%Y-%m-%d", "date": "$date"}}, "avg_score": 1, "std_dev": 1}}
+    ]
+    return list(col.aggregate(pipeline))
+
+@api_app.get("/stats/drill-performance")
+async def get_drill_performance():
+    pipeline = [
+        {"$unwind": "$shots"},
+        {"$group": {
+            "_id": "$drill_name",
+            "avg_score": {"$avg": "$shots.Score"},
+            "avg_time": {"$avg": "$shots.Time"}
+        }},
+        {"$project": {"_id": 0, "drill": "$_id", "avg_score": 1, "avg_time": 1}}
+    ]
+    return list(col.aggregate(pipeline))
+
+@api_app.get("/stats/time-accuracy-correlation")
+async def get_time_accuracy_correlation():
+    pipeline = [
+        {"$unwind": "$shots"},
+        {"$project": {"_id": 0, "x": "$shots.Time", "y": "$shots.Score"}}
+    ]
+    return list(col.aggregate(pipeline))
+
 @api_app.get("/hello")
 async def hello():
     return {"message": "Hello World"}
