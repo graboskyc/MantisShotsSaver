@@ -167,6 +167,11 @@ function init() {
                 chart: { type: 'area', height: 350, toolbar: { show: false } },
                 series: [{ name: 'Avg Score', data: data.map(d => d.avg_score) }],
                 xaxis: { categories: data.map(d => d.date) },
+                yaxis: {
+                    labels: {
+                        formatter: function(val) { return val.toFixed(1); }
+                    }
+                },
                 title: { text: 'Shot Consistency (Avg Score)', align: 'center' }
             };
             new ApexCharts(document.querySelector("#consistency-chart"), options).render();
@@ -185,18 +190,43 @@ function init() {
                     categories: data.map(d => d.drill),
                     labels: { rotate: -45 }
                 },
+                yaxis: {
+                    labels: {
+                        formatter: function(val) { return val.toFixed(1); }
+                    }
+                },
                 title: { text: 'Drill Performance (Avg Score)', align: 'center' }
             };
             new ApexCharts(document.querySelector("#drill-chart"), options).render();
         },
 
         renderCorrelationChart(data) {
+            // Group data for heatmap format: x = Time (steps of 0.5s), y = Score
+            const xCoords = [...new Set(data.map(d => d.x))].sort((a,b) => a-b);
+            const yCoords = [...new Set(data.map(d => d.y))].sort((a,b) => b-a); // Score descending
+            const series = yCoords.map(y => ({
+                name: y.toString(),
+                data: xCoords.map(x => {
+                    const item = data.find(d => d.x === x && d.y === y);
+                    return { x: x.toString() + 's', y: item ? item.count : 0 };
+                })
+            }));
+
             const options = {
-                chart: { type: 'scatter', height: 350, toolbar: { show: false } },
-                series: [{ name: 'Score', data: data.map(d => ({ x: d.x, y: d.y })) }],
-                xaxis: { title: { text: 'Time' } },
-                yaxis: { title: { text: 'Score' } },
-                title: { text: 'Time vs Accuracy', align: 'center' }
+                chart: { type: 'heatmap', height: 350, toolbar: { show: false } },
+                series: series,
+                plotOptions: {
+                    heatmap: {
+                        enableShades: true,
+                        shadeIntensity: 0.5,
+                        colorScale: {
+                            ranges: [{ from: 0, to: 5, name: 'Low', color: '#00A100' },
+                                     { from: 6, to: 15, name: 'Medium', color: '#128FD9' },
+                                     { from: 16, to: 1000, name: 'High', color: '#FFB200' }]
+                        }
+                    }
+                },
+                title: { text: 'Time vs Accuracy (Heatmap)', align: 'center' }
             };
             new ApexCharts(document.querySelector("#correlation-chart"), options).render();
         }

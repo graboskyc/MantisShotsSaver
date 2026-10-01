@@ -196,7 +196,21 @@ async def get_drill_performance():
 async def get_time_accuracy_correlation():
     pipeline = [
         {"$unwind": "$shots"},
-        {"$project": {"_id": 0, "x": "$shots.Time", "y": "$shots.Score"}}
+        {"$project": {
+            "_id": 0,
+            "x": {"$floor": {"$divide": ["$shots.Time", 1.0]}},
+            "y": {"$floor": ["$shots.Score"]}
+        }},
+        {"$group": {
+            "_id": {"x": "$x", "y": "$y"},
+            "count": {"$sum": 1}
+        }},
+        {"$project": {
+            "_id": 0,
+            "x": "$_id.x",
+            "y": "$_id.y",
+            "count": 1
+        }}
     ]
     return list(col.aggregate(pipeline))
 
