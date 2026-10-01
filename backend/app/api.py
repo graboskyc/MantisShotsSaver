@@ -40,11 +40,8 @@ SESSIONURL = "https://train.mantisx.com/itarget/user-sessions-csv/" + os.environ
 
 def import_shots_last_day():
     lastDayUrl = SHOTURL + "?start_date=" + (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d") + "&end_date=" + datetime.now().strftime("%Y-%m-%d")
-    shots = parse_shots_csv(lastDayUrl)
-    if shots:
-        for shot in shots:
-            col.update_one({"session_id": shot["session_id"]}, {"$set": shot}, upsert=True)
-    return {"imported": len(shots) if shots else 0, "urlUsed": lastDayUrl}
+    updated_sessions = parse_shots_csv(lastDayUrl)
+    return {"imported": len(updated_sessions) if updated_sessions else 0, "urlUsed": lastDayUrl}
 
 def import_sessions_last_day():
     lastDayUrl = SESSIONURL + "?start_date=" + (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d") + "&end_date=" + datetime.now().strftime("%Y-%m-%d")
@@ -174,15 +171,18 @@ def parse_shots_csv(source):
         # Convert to a list of objects ready for MongoDB
         result = []
         for session_id, content in sessions.items():
-            if col.find_one({"session_id": session_id}):
-                continue
-            result.append({
-                "session_id": session_id,
-                "date": content["date"],
-                "image": content["image"],
-                "targets": content["targets"],
-                "shots": content["shots"]
-            })
+            col.update_one(
+                {"session_id": session_id},
+                {"$set": {
+                    "session_id": session_id,
+                    "date": content["date"],
+                    "image": content["image"],
+                    "targets": content["targets"],
+                    "shots": content["shots"]
+                }},
+                upsert=True
+            )
+            result.append(session_id)
             
         return result
     finally:
