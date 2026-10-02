@@ -114,23 +114,7 @@ function init() {
         },
 
         renderTimeGaugeChart(time) {
-            const options = {
-                chart: { type: 'radialBar', height: 350 },
-                series: [(time / 5) * 100],
-                plotOptions: {
-                    radialBar: {
-                        startAngle: -90, endAngle: 90,
-                        hollow: { size: '70%' },
-                        dataLabels: {
-                            name: { show: false },
-                            value: { fontSize: '22px', formatter: function(val) { return time + 's' } }
-                        }
-                    }
-                },
-                labels: ['Average Shot Time'],
-                title: { text: 'Average Shot Time', align: 'center' }
-            };
-            new ApexCharts(document.querySelector("#time-gauge-chart"), options).render();
+            new ApexCharts(document.querySelector("#time-gauge-chart"), this.buildTimeGaugeOptions(time, 'Average Shot Time')).render();
         },
 
         renderGaugeChartLast10(accuracy) {
@@ -168,23 +152,74 @@ function init() {
         },
 
         renderTimeGaugeChartLast10(time) {
-            const options = {
-                chart: { type: 'radialBar', height: 350 },
-                series: [(time / 5) * 100],
+            new ApexCharts(document.querySelector("#time-gauge-chart-last10"), this.buildTimeGaugeOptions(time, 'Average Shot Time (Last 10)')).render();
+        },
+
+        buildTimeGaugeOptions(time, title) {
+            const clamped = Math.max(0, Math.min(time, 5));
+            return {
+                series: [clamped],
+                chart: {
+                    height: 350,
+                    type: 'gauge',
+                },
                 plotOptions: {
                     radialBar: {
-                        startAngle: -90, endAngle: 90,
-                        hollow: { size: '70%' },
+                        shape: 'needle',
+                        startAngle: -90,
+                        endAngle: 90,
+                        min: 0,
+                        max: 5,
+                        bands: [
+                            { from: 0,    to: 1.5,  color: '#00A100' },
+                            { from: 1.5,  to: 2.25, color: '#FFB200' },
+                            { from: 2.25, to: 3,    color: '#FF7F00' },
+                            { from: 3,    to: 5,    color: '#FF0000' },
+                        ],
+                        ticks: {
+                            show: true,
+                            major: {
+                                count: 5,
+                                length: 8,
+                                width: 2,
+                                color: '#334155',
+                                placement: 'outside',
+                            },
+                            minor: {
+                                count: 0,
+                            },
+                            labels: {
+                                show: true,
+                                offset: 6,
+                                fontSize: '11px',
+                                color: '#334155',
+                                formatter: function(val) { return Number(val).toFixed(2); },
+                            },
+                        },
+                        needle: {
+                            color: '#0F172A',
+                            length: '60%',
+                            baseWidth: 6,
+                            tipWidth: 1,
+                        },
+                        hollow: {
+                            margin: 0,
+                            size: '70%',
+                        },
                         dataLabels: {
                             name: { show: false },
-                            value: { fontSize: '22px', formatter: function(val) { return time + 's' } }
-                        }
-                    }
+                            value: {
+                                offsetY: 32,
+                                fontSize: '28px',
+                                fontWeight: 700,
+                                formatter: function() { return time + 's' },
+                            },
+                        },
+                    },
                 },
-                labels: ['Average Shot Time (Last 10)'],
-                title: { text: 'Average Shot Time (Last 10)', align: 'center' }
+                labels: ['Avg Shot Time'],
+                title: { text: title, align: 'center' },
             };
-            new ApexCharts(document.querySelector("#time-gauge-chart-last10"), options).render();
         },
 
         renderDistributionChart(data) {
