@@ -103,7 +103,7 @@ function init() {
         },
 
         renderAccuracyGaugeInto(id, accuracy, title) {
-            const color = accuracy < 80 ? '#FF0000' : accuracy <= 90 ? '#FFB200' : '#00A100';
+            const color = accuracy >= 100 ? '#800080' : accuracy < 80 ? '#FF0000' : accuracy <= 90 ? '#FFB200' : '#00A100';
             const options = {
                 chart: {
                     type: 'radialBar',
