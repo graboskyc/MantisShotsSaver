@@ -199,6 +199,30 @@ async def get_shot_distribution():
     # Simplified approach: return raw grouped data if the frontend handles it or pre-aggregate
     return results
 
+@api_app.get("/stats/shot-distribution-last10")
+async def get_shot_distribution_last10():
+    pipeline = [
+        {"$sort": {"date": -1}},
+        {"$limit": 20},
+        {"$unwind": "$shots"},
+        {"$project": {
+            "_id": 0,
+            "x": {"$floor": {"$multiply": ["$shots.Position X", 10]}},
+            "y": {"$floor": {"$multiply": ["$shots.Position Y", 10]}}
+        }},
+        {"$group": {
+            "_id": {"x": "$x", "y": "$y"},
+            "count": {"$sum": 1}
+        }},
+        {"$project": {
+            "_id": 0,
+            "x": "$_id.x",
+            "y": "$_id.y",
+            "count": 1
+        }}
+    ]
+    return list(col.aggregate(pipeline))
+
 @api_app.get("/stats/shot-consistency")
 async def get_shot_consistency():
     pipeline = [

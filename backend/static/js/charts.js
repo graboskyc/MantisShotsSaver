@@ -28,6 +28,9 @@ function init() {
             const distData = await (await fetch(`/api/stats/shot-distribution`)).json();
             this.renderDistributionChart(distData);
 
+            const distLast10Data = await (await fetch(`/api/stats/shot-distribution-last10`)).json();
+            this.renderDistributionChartLast10(distLast10Data);
+
             const consData = await (await fetch(`/api/stats/shot-consistency`)).json();
             this.renderConsistencyChart(consData);
 
@@ -223,6 +226,14 @@ function init() {
         },
 
         renderDistributionChart(data) {
+            this.renderDistributionChartInto("#distribution-chart", data, 'Shot Distribution');
+        },
+
+        renderDistributionChartLast10(data) {
+            this.renderDistributionChartInto("#distribution-chart-last10", data, 'Shot Distribution (Last 20)');
+        },
+
+        renderDistributionChartInto(selector, data, title) {
             // Group data for heatmap format
             const xCoords = [...new Set(data.map(d => d.x))].sort((a,b) => a-b);
             const yCoords = [...new Set(data.map(d => d.y))].sort((a,b) => a-b);
@@ -234,6 +245,26 @@ function init() {
                 })
             }));
 
+            var ranges = [
+                { from: 0, to: 5, name: 'Very Low', color: '#006400' },
+                { from: 6, to: 15, name: 'Low', color: '#00A100' },
+                { from: 16, to: 30, name: 'Moderate', color: '#128FD9' },
+                { from: 31, to: 60, name: 'High', color: '#FFB200' },
+                { from: 61, to: 100, name: 'Very High', color: '#FF4500' },
+                { from: 101, to: 1000, name: 'Extreme', color: '#800080' }
+            ];
+
+            if (title.includes('Last 20')) {
+                ranges = [
+                    { from: 0, to: 2, name: 'Very Low', color: '#006400' },
+                    { from: 3, to: 5, name: 'Low', color: '#00A100' },
+                    { from: 6, to: 10, name: 'Moderate', color: '#128FD9' },
+                    { from: 11, to: 15, name: 'High', color: '#FFB200' },
+                    { from: 16, to: 20, name: 'Very High', color: '#FF4500' },
+                    { from: 21, to: 1000, name: 'Extreme', color: '#800080' }
+                ];
+            }
+
             const options = {
                 chart: { type: 'heatmap', height: 600, toolbar: { show: false } },
                 series: series,
@@ -244,21 +275,14 @@ function init() {
                         shadeIntensity: 0.5,
                         distributed: false,
                         colorScale: {
-                            ranges: [
-                                { from: 0, to: 5, name: 'Very Low', color: '#006400' },
-                                { from: 6, to: 15, name: 'Low', color: '#00A100' },
-                                { from: 16, to: 30, name: 'Moderate', color: '#128FD9' },
-                                { from: 31, to: 60, name: 'High', color: '#FFB200' },
-                                { from: 61, to: 100, name: 'Very High', color: '#FF4500' },
-                                { from: 101, to: 1000, name: 'Extreme', color: '#800080' }
-                            ]
+                            ranges: ranges
                         }
                     }
                 },
                 stroke: { width: 2, colors: ['#fff'] },
-                title: { text: 'Shot Distribution', align: 'center' }
+                title: { text: title, align: 'center' }
             };
-            new ApexCharts(document.querySelector("#distribution-chart"), options).render();
+            new ApexCharts(document.querySelector(selector), options).render();
         },
 
         renderConsistencyChart(data) {
