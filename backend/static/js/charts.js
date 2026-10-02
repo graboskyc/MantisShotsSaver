@@ -203,6 +203,24 @@ function init() {
                 },
                 labels: ['Avg Shot Time'],
                 title: { text: title, align: 'center' },
+                responsive: [
+                    {
+                        breakpoint: 576,
+                        options: {
+                            chart: { height: 300 },
+                            plotOptions: {
+                                radialBar: {
+                                    dataLabels: {
+                                        value: { offsetY: 10, fontSize: '22px' },
+                                    },
+                                    ticks: {
+                                        labels: { fontSize: '9px', offset: 2 },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                ],
             };
         },
 
