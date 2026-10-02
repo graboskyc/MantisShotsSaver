@@ -39,6 +39,24 @@ function init() {
             }
         },
 
+        importing: false,
+
+        async importLastDay() {
+            if(confirm('Are you sure you want to import the last day?')) {
+                this.importing = true;
+            } else {
+                return;
+            }
+            try {
+                await fetch('/api/importSessionsLastDay');
+                await fetch('/api/importShotsLastDay');
+                location.reload();
+            } catch (e) {
+                console.error('Import failed:', e);
+                this.importing = false;
+            }
+        },
+
         delay(ms) {
             return new Promise(resolve => setTimeout(resolve, ms))
         }

@@ -57,18 +57,29 @@
                     </div>
                     <div x-show="!currentSession">Loading...</div>
                 </header>
+
                 <footer class="nav-footer">
-                    <button @click="prevSession" :disabled="skip === 0 && currentIndex === 0">
-                        <span class="material-symbols-outlined">
-                            skip_previous
-                        </span>
-                    </button>
-                    <button @click="nextSession">
-                        <span class="material-symbols-outlined">
-                            skip_next
-                        </span>
-                    </button>
+                    <div class="grid" style="margin:.5rem;">
+                        <button @click="prevSession" :disabled="skip === 0 && currentIndex === 0">
+                            <span class="material-symbols-outlined">
+                                skip_previous
+                            </span>
+                        </button>
+                        <button @click="nextSession">
+                            <span class="material-symbols-outlined">
+                                skip_next
+                            </span>
+                        </button>
+                    </div>
+
+                    <div class="grid" style="margin:.5rem;">
+                        <button @click="importLastDay" :disabled="importing" style="width: 100%;">
+                            <span x-show="!importing">Import Today's Data</span>
+                            <span x-show="importing" aria-busy="true">Importing...</span>
+                        </button>
+                    </div>
+                    
                 </footer>
-            </article>
+            </article> 
     </body>
 </html>

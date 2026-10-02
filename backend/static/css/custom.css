@@ -30,18 +30,6 @@ th,td {
     border-color: var(--pico-form-element-invalid-active);
 }
 
-.nav-footer {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    width: 100%;
-}
-
-.nav-footer button {
-    flex: 1;
-    width: 48%;
-}
-
 .shot-label {
     position: absolute;
     background: var(--pico-secondary-hover-background);
