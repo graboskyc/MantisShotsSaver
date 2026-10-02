@@ -107,10 +107,23 @@ async def get_session_scores():
     results = list(col.aggregate(pipeline))
     return results
 
+def build_gauge_pipeline(drill_filter: str = None, last_n: int = None):
+    """Builds the shared aggregation pipeline for gauge stats (accuracy / shot time).
+
+    Optionally filters sessions by a case-insensitive drill_name substring
+    and/or restricts to the most recent N sessions.
+    """
+    pipeline = []
+    if drill_filter:
+        pipeline.append({"$match": {"drill_name": {"$regex": drill_filter, "$options": "i"}}})
+    if last_n:
+        pipeline.extend([{"$sort": {"date": -1}}, {"$limit": last_n}])
+    pipeline.append({"$unwind": "$shots"})
+    return pipeline
+
 @api_app.get("/stats/average-accuracy")
-async def get_average_accuracy():
-    pipeline = [
-        {"$unwind": "$shots"},
+async def get_average_accuracy(drill: str = None, last: int = None):
+    pipeline = build_gauge_pipeline(drill, last) + [
         {"$project": {
             "is_hit": {"$cond": [{"$gt": ["$shots.Score", 0]}, 1, 0]}
         }},
@@ -120,49 +133,13 @@ async def get_average_accuracy():
         }}
     ]
     result = list(col.aggregate(pipeline))
-    if not result:
+    if not result or result[0]["avg_accuracy"] is None:
         return {"accuracy": 0}
     return {"accuracy": round(result[0]["avg_accuracy"] * 100, 2)}
 
 @api_app.get("/stats/average-shot-time")
-async def get_average_shot_time():
-    pipeline = [
-        {"$unwind": "$shots"},
-        {"$group": {
-            "_id": None,
-            "avg_time": {"$avg": "$shots.Time"}
-        }}
-    ]
-    result = list(col.aggregate(pipeline))
-    if not result or result[0]["avg_time"] is None:
-        return {"time": 0}
-    return {"time": round(result[0]["avg_time"], 2)}
-
-@api_app.get("/stats/average-accuracy-last10")
-async def get_average_accuracy_last10():
-    pipeline = [
-        {"$sort": {"date": -1}},
-        {"$limit": 10},
-        {"$unwind": "$shots"},
-        {"$project": {
-            "is_hit": {"$cond": [{"$gt": ["$shots.Score", 0]}, 1, 0]}
-        }},
-        {"$group": {
-            "_id": None,
-            "avg_accuracy": {"$avg": "$is_hit"}
-        }}
-    ]
-    result = list(col.aggregate(pipeline))
-    if not result:
-        return {"accuracy": 0}
-    return {"accuracy": round(result[0]["avg_accuracy"] * 100, 2)}
-
-@api_app.get("/stats/average-shot-time-last10")
-async def get_average_shot_time_last10():
-    pipeline = [
-        {"$sort": {"date": -1}},
-        {"$limit": 10},
-        {"$unwind": "$shots"},
+async def get_average_shot_time(drill: str = None, last: int = None):
+    pipeline = build_gauge_pipeline(drill, last) + [
         {"$group": {
             "_id": None,
             "avg_time": {"$avg": "$shots.Time"}

@@ -42,23 +42,17 @@
                     <div id="candlestick-chart"></div>
                 </article>
 
-                <article>
-                    <h2>Accuracy and Time (All Time)</h2>
-                    <div class="grid" style="margin-bottom: 10px;">
-                        <div id="gauge-chart"></div>
-                        <div id="time-gauge-chart"></div>
-                    </div>
-                    <br />
-                </article>
-
-                <article>
-                    <h2>Accuracy and Time (Last 10 Sessions)</h2>
-                    <div class="grid" style="margin-bottom: 10px;">
-                        <div id="gauge-chart-last10"></div>
-                        <div id="time-gauge-chart-last10"></div>
-                    </div>
-                    <br />
-                </article>
+                <template x-for="group in gaugeGroups" :key="group.title">
+                    <article>
+                        <h2 x-text="group.title"></h2>
+                        <div class="grid" style="margin-bottom: 10px;">
+                            <template x-for="gauge in group.gauges" :key="gauge.id">
+                                <div :id="gauge.id"></div>
+                            </template>
+                        </div>
+                        <br />
+                    </article>
+                </template>
 
                 <article>
                     <h2>Shot Distribution (All Time)</h2>
