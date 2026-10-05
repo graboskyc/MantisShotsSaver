@@ -392,6 +392,7 @@ def parse_sessions_csv(source):
                 "end_time": datetime.fromisoformat(data['End Time'].replace('Z', '+00:00')),
                 "par_time": float(data['Par Time']),
                 "drill_name": data['Drill Name'],
+                "isHolster": "holster" in data['Drill Name'].casefold(),
                 "num_players": int(data['Num Players']),
                 "target_distance_yards": float(data['Target Distance Yards']),
                 "view_aspect": float(data['View Aspect']),
